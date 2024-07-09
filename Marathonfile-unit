@@ -1,6 +1,9 @@
 name: "iOS xctest"
 outputDir: "report/marathon-unitTest"
 debug: true
+batchingStrategy:
+  type: "fixed-size"
+  size: 100
 vendorConfiguration:
   type: "iOS"
   bundle:

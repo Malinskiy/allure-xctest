@@ -1,6 +1,9 @@
 name: "iOS xcuitest"
 outputDir: "report/marathon-uiTests"
 debug: true
+batchingStrategy:
+  type: "fixed-size"
+  size: 10
 vendorConfiguration:
   type: "iOS"
   bundle:
