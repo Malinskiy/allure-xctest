@@ -3,18 +3,33 @@ name: Build
 on:
   pull_request:
     branches:
-      - '*'
+      - "*"
   push:
     branches:
-      - 'master'
+      - "master"
 
 jobs:
   build:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v2
-      - name: "Run tests"
-        run: fastlane tests
+      - name: "Build for testing"
+        run: fastlane build
+      - name: "Install marathon test runner"
+        run: brew install malinskiy/tap/marathon
+      - name: "Run unit tests"
+        if: false # Needs latest marathon 0.10.2
+        run: marathon run -m Marathonfile-unit
+      - uses: actions/upload-artifact@v3
+        with:
+          name: unittest
+          path: report/marathon-unitTest
+      - name: "Run ui tests"
+        run: marathon run -m Marathonfile-ui
+      - uses: actions/upload-artifact@v3
+        with:
+          name: uitest
+          path: report/marathon-uiTests
       - name: "Copy results"
         run: cp -r output/*.xcresult output/report.xcresult
       - name: "Generate Allure"
