@@ -3,18 +3,33 @@ name: Build
 on:
   pull_request:
     branches:
-      - '*'
+      - "*"
   push:
     branches:
-      - 'master'
+      - "master"
 
 jobs:
   build:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v2
-      - name: "Run tests"
-        run: fastlane tests
+      - name: "Build for testing"
+        run: fastlane build
+      - name: "Install marathon test runner"
+        run: brew install malinskiy/tap/marathon
+      - name: "Run unit tests"
+        if: false # Needs latest marathon 0.10.2
+        run: marathon run -m Marathonfile-unit
+      - uses: actions/upload-artifact@v3
+        with:
+          name: unittest
+          path: report/marathon-unitTest
+      - name: "Run ui tests"
+        run: marathon run -m Marathonfile-ui
+      - uses: actions/upload-artifact@v3
+        with:
+          name: uitest
+          path: report/marathon-uiTests
       - name: "Copy results"
         run: cp -r output/*.xcresult output/report.xcresult
       - name: "Generate Allure"
@@ -25,3 +40,24 @@ jobs:
         with:
           name: allure-results
           path: output/allure-results
+      - name: Load test report history
+        uses: actions/checkout@v3
+        if: always()
+        continue-on-error: true
+        with:
+          ref: gh-pages
+          path: gh-pages
+      - name: Build test report
+        uses: simple-elf/allure-report-action@v1.7
+        if: always()
+        with:
+          gh_pages: gh-pages
+          allure_history: allure-history
+          allure_results: build/allure-results
+      - name: Publish test report
+        uses: peaceiris/actions-gh-pages@v3
+        if: always()
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: allure-history
